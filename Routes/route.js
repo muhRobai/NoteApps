@@ -2,36 +2,17 @@
 
 module.exports = function (app){
 	const control = require('./../Controler/noteController');
-	const controlCtgry = require('./../Controler/categoryControler');
+	const controlCategory = require('./../Controler/categoryControler');
 
-
-	//FOR NOTES......................
-	//get data
 	app.get('/', control.welcome);
-	app.get('/note', control.note);
-	app.get('/note/:id', control.noteById);
-
-	//post data
-	app.post('/note', control.add);
-
-	//update data
-	app.patch('/note/:id', control.update);
-
-	//delete data
-	app.delete('/note/:id', control.delete);
-
-	//FOR Category
-
-	//GET Catogory
-	app.get('/category', controlCtgry.show);
-	app.get('/category/:id', controlCtgry.showById);
-
-	//POST Category
-	app.post('/category', controlCtgry.add);
-
-	//Update Category
-	app.patch('/category/:id', controlCtgry.update);
-
-	//delete category
-	app.delete('/category/:id', controlCtgry.delete);
+	app.get('/notes', control.note);
+	app.get('/notes/:id', control.noteById);
+	app.post('/notes', control.add);
+	app.patch('/notes/:id', control.update);
+	app.delete('/notes/:id', control.delete);
+	app.get('/category', controlCategory.show);
+	app.get('/category/:id', controlCategory.showById);
+	app.post('/category', controlCategory.add);
+	app.patch('/category/:id', controlCategory.update);
+	app.delete('/category/:id', controlCategory.delete);
 }

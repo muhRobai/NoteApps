@@ -1,4 +1,5 @@
 'use strict'
+const isEmpty = require('lodash.isempty');
 const Joi = require('joi');
 const response = require('./../Database/response');
 const con = require('./../Database/connection');
@@ -9,15 +10,130 @@ exports.welcome = function (req, res){
 }
 
 exports.note = function (req, res){
-	var sql = "select id, title, note, date_note as date, category from note join category on note.id_category = category.id_category";
+	let search = req.query.search;
+	let sort = req.query.sort;
+	let page = req.query.page;
+	let limit = parseInt(req.query.limit)|| 10;
 
-	con.query (sql, function (error, rows, field){
-		if (error) {
-			console.log(error);
+	let data = [];
+
+
+
+	let sql =  "select id, title, note, date_note as date,update_date, category from note join category on note.id_category = category.id_category";
+	let default_sql =  "select id, title, note, date_note as date, update_date, category from note join category on note.id_category = category.id_category order by update_date desc limit 10";
+
+	if (!isEmpty(search)) {
+		sql += ` where title like '%${search}%'`
+	}
+
+	if (!isEmpty(sort)){
+		if (sort === 'desc') {
+			sql += ' order by id desc'
+		}else if(sort === 'asc'){
+			sql += ' order by id asc'
 		}else{
-			response.ok (rows, res);
+			return res.send({
+				message : ' please insert sort asc || desc'
+			});
 		}
-	});
+	}
+	
+
+	if (!isEmpty(page)){
+		var start = (page * limit) - limit;
+
+		if (start === limit) {
+			start == limit + 1;
+		}
+
+		sql += ` limit ${start}, ${limit}`;
+	}
+
+	if (isEmpty(search) && isEmpty(page) && isEmpty(page)) {
+		con.query (default_sql, function (error, rows, field){
+			if (error) {
+				console.log(error);
+			}else{
+
+				if (isEmpty(rows)) {
+					res.json({
+						status: 404,
+						message: "data not Found "
+					});
+				}else{
+					//response.ok (rows, res);
+					con.query('select * from note', function(error, raw){
+						if (error) {
+							console.log(error);
+						}else{
+							res.status(200).json({
+								status:200,
+								data: rows,
+								totalPage: Math.ceil(raw.length/limit),
+								TotalData: raw.length,
+								Limit: limit,
+								page: page 
+							});
+						}
+						
+					});
+					
+				}
+			}
+		});
+
+
+	}else{
+		if (!isEmpty(page)) {
+			con.query (sql, function (error, rows, field){
+				if (error) {
+					console.log(error);
+				}else{
+					//response.ok (rows, res);
+					con.query(sql,function (error, row){
+						if (error) {
+							console.log(error);
+						}else{
+							res.status(200).json({
+								status:200,
+								data: rows,
+								totalPage: Math.ceil(row.length/limit),
+								TotalData: row.length,
+								Limit: limit,
+								page: page 
+							});
+						}
+						
+					});
+				}
+			});
+		}else{
+			con.query (sql, function (error, rows, field){
+				if (error) {
+					console.log(error);
+				}else{
+					//response.ok (rows, res);
+					con.query(sql,function (error, row){
+						if (error) {
+							console.log(error);
+						}else{
+							res.status(200).json({
+								status:200,
+								data: rows,
+								totalPage: Math.ceil(row.length/limit),
+								TotalData: row.length,
+								Limit: limit,
+								page: page 
+							});
+						}
+						
+					});
+				}
+			});
+		}	
+	}
+
+	
 }
 
 exports.noteById = function (req, res){
@@ -149,7 +265,22 @@ exports.delete = function (req, res){
 			});	
 
 		}
-	});
+	});	
+}
 
-		
+exports.search = function (req, res){
+	let title = req.params.title;
+
+	title = req.params.title;
+	limit = req.param.limit;
+
+	var sql = `SELECT * FROM note JOIN category on category.id_category = note.id_category where title LIKE '%${title}%' order by id DESC limit 2 `;
+
+	con.query(sql, function (error, rows, fields){
+		if (error) {
+			console.log(error);
+		}else{
+			response.ok(rows, res);	
+		}
+	});
 }
