@@ -13,6 +13,7 @@ exports.note = function (req, res){
 	let search = req.query.search;
 	let sort = req.query.sort;
 	let page = req.query.page;
+	let pageReport = parseInt(page) || 1;
 	let limit = parseInt(req.query.limit)|| 10;
 
 	let data = [];
@@ -20,7 +21,7 @@ exports.note = function (req, res){
 
 
 	let sql =  "select id, title, note, date_note as date,update_date, category from note join category on note.id_category = category.id_category";
-	let default_sql =  "select id, title, note, date_note as date, update_date, category from note join category on note.id_category = category.id_category order by update_date desc limit 10";
+	let default_sql =  "select id, title, note, date_note as date, category from note join category on note.id_category = category.id_category order by date_note asc limit 10";
 
 	if (!isEmpty(search)) {
 		sql += ` where title like '%${search}%'`
@@ -28,9 +29,9 @@ exports.note = function (req, res){
 
 	if (!isEmpty(sort)){
 		if (sort === 'desc') {
-			sql += ' order by id desc'
+			sql += ' order by date_note desc'
 		}else if(sort === 'asc'){
-			sql += ' order by id asc'
+			sql += ' order by date_note asc'
 		}else{
 			return res.send({
 				message : ' please insert sort asc || desc'
@@ -40,6 +41,7 @@ exports.note = function (req, res){
 	
 
 	if (!isEmpty(page)){
+		var sqlDefPage = sql;
 		var start = (page * limit) - limit;
 
 		if (start === limit) {
@@ -47,6 +49,8 @@ exports.note = function (req, res){
 		}
 
 		sql += ` limit ${start}, ${limit}`;
+                    
+		//return console.log(sql_row);
 	}
 
 	if (isEmpty(search) && isEmpty(page) && isEmpty(page)) {
@@ -62,7 +66,8 @@ exports.note = function (req, res){
 					});
 				}else{
 					//response.ok (rows, res);
-					con.query('select * from note', function(error, raw){
+					var sqldef = 'select * from note';
+					con.query(sqldef, function(error, raw){
 						if (error) {
 							console.log(error);
 						}else{
@@ -72,7 +77,7 @@ exports.note = function (req, res){
 								totalPage: Math.ceil(raw.length/limit),
 								TotalData: raw.length,
 								Limit: limit,
-								page: page 
+								page: pageReport 
 							});
 						}
 						
@@ -90,7 +95,7 @@ exports.note = function (req, res){
 					console.log(error);
 				}else{
 					//response.ok (rows, res);
-					con.query(sql,function (error, row){
+					con.query(sqlDefPage,function (error, row){
 						if (error) {
 							console.log(error);
 						}else{
@@ -98,9 +103,9 @@ exports.note = function (req, res){
 								status:200,
 								data: rows,
 								totalPage: Math.ceil(row.length/limit),
-								TotalData: row.length,
+								TotalData: rows.length,
 								Limit: limit,
-								page: page 
+								page: pageReport 
 							});
 						}
 						
@@ -123,7 +128,7 @@ exports.note = function (req, res){
 								totalPage: Math.ceil(row.length/limit),
 								TotalData: row.length,
 								Limit: limit,
-								page: page 
+								page: pageReport 
 							});
 						}
 						
@@ -203,11 +208,11 @@ exports.update = function (req, res){
 	//let { title, note, id_category } = req.body;
 
 	if (title == undefined) {
-		var sql = `update note set note = "${note}", update_date = "${date}", id_category = "${id_category}" where id = ${id}`;
+		var sql = `update note set note = "${note}", date_note = "${date}", id_category = "${id_category}" where id = ${id}`;
 	}else if(note == undefined){
-		var sql = `update note set title = "${title}", update_date = "${date}", id_category = "${id_category}" where id = ${id}`;
+		var sql = `update note set title = "${title}", date_note = "${date}", id_category = "${id_category}" where id = ${id}`;
 	}else{
-		var  sql = `Update note set title = "${title}", note = "${note}", update_date = "${date}", id_category = "${id_category}" where id = ${id}`;
+		var  sql = `Update note set title = "${title}", note = "${note}", date_note = "${date}", id_category = "${id_category}" where id = ${id}`;
 
 	}
 	
